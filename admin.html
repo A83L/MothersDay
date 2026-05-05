@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Muttertag</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf7f2;--card:#fff;--border:rgba(0,0,0,.09);
+  --txt:#1e1510;--sub:#7a6050;
+  --rose:#c4748a;--gold:#c8965a;--ok:#4a9e6b;
+  --err:#c4444a;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#1a1510;--card:#231e18;--border:rgba(255,255,255,.1);--txt:#f0ece5;--sub:#9e8c80;}
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);min-height:100vh;font-family:'DM Sans',sans-serif;color:var(--txt);padding:clamp(16px,4vw,48px);}
+
+/* ── Top bar ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
+.topbar h1{font-family:'Cormorant Garamond',serif;font-weight:400;font-style:italic;font-size:clamp(20px,4vw,28px);}
+.topbar-right{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.lang-switch{display:flex;gap:0;border:.5px solid var(--border);border-radius:20px;overflow:hidden;}
+.lang-btn{background:none;border:none;padding:6px 14px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--sub);transition:all .2s;letter-spacing:.04em;}
+.lang-btn.on{background:linear-gradient(135deg,var(--gold),var(--rose));color:#fff;}
+.live-link{font-size:13px;color:var(--gold);text-decoration:none;background:rgba(200,150,90,.1);border:.5px solid rgba(200,150,90,.25);border-radius:20px;padding:6px 14px;transition:background .2s;}
+.live-link:hover{background:rgba(200,150,90,.2);}
+
+/* ── Info box ── */
+.info{background:rgba(200,150,90,.1);border:.5px solid rgba(200,150,90,.25);border-radius:12px;padding:14px 18px;margin-bottom:16px;font-size:13px;color:var(--sub);line-height:1.6;}
+.info strong{color:var(--txt);}
+.info code{background:rgba(0,0,0,.07);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:11px;}
+
+/* ── Section card ── */
+.card{background:var(--card);border-radius:16px;border:.5px solid var(--border);padding:20px 22px;margin-bottom:16px;}
+.card h2{font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;color:var(--sub);letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px;}
+
+/* ── Field ── */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.field label{font-size:11px;color:var(--sub);letter-spacing:.07em;text-transform:uppercase;}
+.field input[type=text],.field input[type=url],.field select{background:var(--bg);border:.5px solid var(--border);border-radius:10px;padding:9px 13px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--txt);outline:none;width:100%;transition:border-color .2s;}
+.field input:focus{border-color:var(--rose);}
+.note{font-size:11px;color:var(--sub);margin-top:4px;line-height:1.55;}
+.note code{background:rgba(0,0,0,.06);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:11px;}
+
+/* ── Textarea with char counter ── */
+.textarea-wrap{position:relative;}
+.textarea-wrap textarea{width:100%;background:var(--bg);border:.5px solid var(--border);border-radius:10px;padding:10px 13px;font-size:14px;font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--txt);outline:none;resize:vertical;min-height:90px;transition:border-color .2s;line-height:1.7;}
+.textarea-wrap textarea:focus{border-color:var(--rose);}
+.char-bar{height:3px;border-radius:2px;margin-top:5px;background:rgba(0,0,0,.08);overflow:hidden;}
+.char-bar-fill{height:100%;border-radius:2px;background:var(--ok);transition:width .2s,background .2s;}
+.char-info{display:flex;justify-content:space-between;margin-top:3px;}
+.char-count{font-size:11px;color:var(--sub);}
+.char-count.warn{color:var(--gold);}
+.char-count.over{color:var(--err);}
+
+/* ── Toggle ── */
+.tog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.tog-row span{font-size:14px;}
+.tog{width:44px;height:26px;background:rgba(0,0,0,.15);border-radius:13px;position:relative;cursor:pointer;border:none;transition:background .3s;flex-shrink:0;}
+.tog.on{background:linear-gradient(135deg,var(--gold),var(--rose));}
+.tog::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .3s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.tog.on::after{transform:translateX(18px);}
+
+/* ── Presets ── */
+.presets{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
+.preset{border:.5px solid var(--border);border-radius:20px;padding:5px 13px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;}
+
+/* ── Color row ── */
+.color-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.color-row{display:flex;flex-direction:column;gap:5px;}
+.color-row label{font-size:11px;color:var(--sub);letter-spacing:.06em;text-transform:uppercase;}
+.color-inner{display:flex;align-items:center;gap:8px;}
+.color-inner input[type=color]{width:36px;height:36px;border:.5px solid var(--border);border-radius:8px;cursor:pointer;padding:2px;background:var(--card);}
+.color-inner input[type=text]{flex:1;background:var(--bg);border:.5px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--txt);outline:none;}
+
+/* ── Page tabs ── */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.tab{background:rgba(0,0,0,.04);border:.5px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--sub);cursor:pointer;transition:all .2s;letter-spacing:.03em;}
+.tab.on{background:rgba(196,116,138,.12);border-color:rgba(196,116,138,.3);color:var(--txt);}
+.tab-add{background:rgba(200,150,90,.08);border-color:rgba(200,150,90,.25);color:var(--gold);}
+.tab-del{background:rgba(196,68,74,.07);border-color:rgba(196,68,74,.2);color:var(--err);}
+
+/* ── Photo list ── */
+.photo-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.photo-row{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.03);border-radius:10px;padding:8px 12px;border:.5px solid var(--border);}
+.photo-thumb{width:42px;height:42px;border-radius:7px;overflow:hidden;flex-shrink:0;background:rgba(0,0,0,.07);display:flex;align-items:center;justify-content:center;font-size:18px;}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;}
+.photo-fields{flex:1;display:flex;flex-direction:column;gap:5px;}
+.photo-fields input{background:var(--bg);border:.5px solid var(--border);border-radius:8px;padding:7px 11px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--txt);outline:none;width:100%;}
+.photo-fields input:focus{border-color:var(--rose);}
+.photo-fields input.cap{font-family:'Cormorant Garamond',serif;font-style:italic;}
+.photo-del{background:none;border:none;cursor:pointer;color:var(--sub);font-size:16px;padding:4px 6px;border-radius:6px;transition:color .2s;flex-shrink:0;}
+.photo-del:hover{color:var(--err);}
+.add-row{display:flex;gap:8px;}
+.add-row input{flex:1;background:var(--bg);border:.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--txt);outline:none;}
+.add-row input:focus{border-color:var(--rose);}
+.add-btn{background:rgba(196,116,138,.1);border:.5px solid rgba(196,116,138,.22);border-radius:10px;padding:9px 14px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--txt);cursor:pointer;white-space:nowrap;transition:background .2s;}
+.add-btn:hover{background:rgba(196,116,138,.2);}
+
+/* ── Music preview ── */
+.music-row{display:flex;gap:8px;align-items:center;}
+.music-row input{flex:1;}
+.play-btn{background:rgba(200,150,90,.1);border:.5px solid rgba(200,150,90,.25);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:background .2s;flex-shrink:0;}
+.play-btn:hover{background:rgba(200,150,90,.25);}
+audio{display:none;}
+
+/* ── Output ── */
+.output-wrap{position:relative;}
+#output{width:100%;min-height:160px;background:#1a1510;color:#d4c8be;border-radius:12px;padding:16px;font-family:monospace;font-size:11px;line-height:1.6;border:.5px solid rgba(255,255,255,.1);resize:vertical;outline:none;white-space:pre;}
+.copy-btn{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.12);border:.5px solid rgba(255,255,255,.2);border-radius:8px;padding:5px 12px;font-size:12px;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;}
+.copy-btn:hover{background:rgba(255,255,255,.22);}
+.copy-btn.done{background:rgba(74,158,107,.4);}
+
+/* ── Buttons ── */
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+.btn-primary{background:linear-gradient(135deg,var(--gold),var(--rose));color:#fff;border:none;border-radius:12px;padding:13px 26px;font-size:14px;font-family:'DM Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:opacity .2s;flex:1;}
+.btn-primary:hover{opacity:.9;}
+.btn-sec{background:rgba(0,0,0,.06);border:.5px solid var(--border);border-radius:12px;padding:13px 20px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--sub);cursor:pointer;transition:background .2s;}
+.btn-sec:hover{background:rgba(0,0,0,.1);}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(28,14,4,.9);color:#fff;padding:8px 18px;border-radius:50px;font-size:12px;letter-spacing:.04em;opacity:0;transition:all .24s;z-index:500;pointer-events:none;white-space:nowrap;}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1 id="adminTitle">✦ Admin — Muttertag</h1>
+    <p style="font-size:12px;color:var(--sub);margin-top:3px;" id="adminSub">Konfiguration bearbeiten &amp; Code generieren</p>
+  </div>
+  <div class="topbar-right">
+    <div class="lang-switch">
+      <button class="lang-btn on" data-lang="de">DE</button>
+      <button class="lang-btn" data-lang="en">EN</button>
+    </div>
+    <a class="live-link" href="index.html" target="_blank" id="liveLink">🔗 Live-Seite</a>
+  </div>
+</div>
+
+<div class="info" id="infoBox">
+  <strong>Workflow:</strong> Alles einstellen → <em>Config generieren</em> → Code kopieren →
+  in <code>index.html</code> den <code>const CONFIG = {…};</code> Block ersetzen → auf GitHub pushen.
+  Dateien in <code>assets/</code> hochladen.
+</div>
+
+<!-- Global settings -->
+<div class="card">
+  <h2 id="lbl-global">Seiten-Einstellungen</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div class="field">
+      <label id="lbl-heading">Überschrift</label>
+      <input type="text" id="s-heading" value="Für Mama 💌">
+    </div>
+    <div class="field">
+      <label id="lbl-from">Absender</label>
+      <input type="text" id="s-from" value="Dein Kind">
+    </div>
+  </div>
+  <div class="field">
+    <label id="lbl-music">Hintergrundmusik</label>
+    <div class="music-row">
+      <input type="text" id="s-music" placeholder="assets/musik.mp3">
+      <button class="play-btn" id="playBtn" title="Vorschau">▶</button>
+    </div>
+    <audio id="previewAudio"></audio>
+    <p class="note" id="lbl-music-note">MP3 in <code>assets/</code> hochladen → Pfad eingeben. Leer = kein Musik-Button.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div class="tog-row">
+      <span id="lbl-autoplay">Musik auto-starten</span>
+      <button class="tog" id="tog-ap"></button>
+    </div>
+    <div class="field">
+      <label id="lbl-interval">Auto-Wechsel Polaroids (Sek.)</label>
+      <input type="text" id="s-interval" value="5" style="width:80px;">
+    </div>
+  </div>
+</div>
+
+<!-- Theme -->
+<div class="card">
+  <h2 id="lbl-theme">Farb-Thema</h2>
+  <div class="presets" id="presets">
+    <button class="preset" data-p="warm"   style="background:linear-gradient(135deg,rgba(255,200,150,.4),rgba(255,170,200,.3))">Warm</button>
+    <button class="preset" data-p="rose"   style="background:linear-gradient(135deg,rgba(255,180,200,.45),rgba(220,150,220,.35))">Rose</button>
+    <button class="preset" data-p="sky"    style="background:linear-gradient(135deg,rgba(160,210,255,.4),rgba(180,230,255,.3))">Himmel</button>
+    <button class="preset" data-p="forest" style="background:linear-gradient(135deg,rgba(160,220,180,.4),rgba(200,240,200,.3))">Wald</button>
+    <button class="preset" data-p="dusk"   style="background:linear-gradient(135deg,rgba(180,150,230,.4),rgba(230,160,200,.3))">Dämmerung</button>
+    <button class="preset" data-p="ivory"  style="background:linear-gradient(135deg,rgba(255,245,220,.8),rgba(240,230,200,.7))">Elfenbein</button>
+  </div>
+  <div class="color-grid">
+    <div class="color-row"><label id="lbl-cbg">Hintergrund</label><div class="color-inner"><input type="color" id="c-bg" value="#fdf6ee"><input type="text" id="c-bg-t" value="#fdf6ee"></div></div>
+    <div class="color-row"><label id="lbl-cg1">Glow oben-links</label><div class="color-inner"><input type="color" id="c-g1" value="#ffb870"><input type="text" id="c-g1-t" value="rgba(255,200,160,0.45)"></div></div>
+    <div class="color-row"><label id="lbl-cg2">Glow unten-rechts</label><div class="color-inner"><input type="color" id="c-g2" value="#ffaacc"><input type="text" id="c-g2-t" value="rgba(255,180,200,0.30)"></div></div>
+    <div class="color-row"><label id="lbl-cg3">Glow Mitte</label><div class="color-inner"><input type="color" id="c-g3" value="#ffd4a0"><input type="text" id="c-g3-t" value="rgba(255,220,180,0.20)"></div></div>
+  </div>
+</div>
+
+<!-- Letter pages -->
+<div class="card">
+  <h2 id="lbl-letter">Brief — Seiten</h2>
+  <div class="tabs" id="letterTabs"></div>
+  <div class="field">
+    <label id="lbl-pagetext">Text dieser Seite</label>
+    <div class="textarea-wrap">
+      <textarea id="pageText" maxlength="280" rows="5" placeholder="Liebe Mama,&#10;..."></textarea>
+      <div class="char-bar"><div class="char-bar-fill" id="charFill" style="width:0%"></div></div>
+      <div class="char-info">
+        <span class="char-count" id="charCount">0 / 220</span>
+        <span style="font-size:11px;color:var(--sub)" id="lbl-charlimit">Empfohlen: max 220 Zeichen</span>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="add-btn" id="addPageBtn" id="lbl-addpage">+ Seite hinzufügen</button>
+    <button class="btn-sec" id="delPageBtn" style="font-size:13px;padding:9px 14px;" id="lbl-delpage">Seite löschen</button>
+  </div>
+</div>
+
+<!-- Polaroids -->
+<div class="card">
+  <h2 id="lbl-polaroids">Polaroid-Fotos (max 6)</h2>
+  <div class="photo-list" id="photoList"></div>
+  <div class="add-row" id="addPhotoRow" style="display:none">
+    <input type="text" id="newPhotoUrl" placeholder="assets/foto1.jpg  oder  https://...">
+    <button class="add-btn" id="addPhotoBtn">+ Foto</button>
+  </div>
+  <p class="note" style="margin-top:8px" id="lbl-photo-note">Fotos in <code>assets/</code> laden → Pfad eingeben. Max 6 Polaroids.</p>
+</div>
+
+<!-- Output -->
+<div class="card">
+  <h2 id="lbl-output">Generierter CONFIG-Block</h2>
+  <p style="font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.5;" id="lbl-output-desc">
+    Config generieren → kopieren → in <code>index.html</code> den <code>const CONFIG = {…};</code> Block ersetzen → pushen.
+  </p>
+  <div class="output-wrap">
+    <textarea id="output" readonly spellcheck="false">← Config generieren</textarea>
+    <button class="copy-btn" id="copyBtn">Kopieren</button>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn-primary" id="generateBtn">⚙ Config generieren</button>
+  <button class="btn-sec" id="previewBtn">🔗 Live-Seite öffnen</button>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════
+//  TRANSLATIONS
+// ══════════════════════════════════
+const T={
+  de:{
+    adminTitle:'✦ Admin — Muttertag',
+    adminSub:'Konfiguration bearbeiten & Code generieren',
+    liveLink:'🔗 Live-Seite',
+    infoBox:'<strong>Workflow:</strong> Alles einstellen → <em>Config generieren</em> → Code kopieren → in <code>index.html</code> den <code>const CONFIG = {…};</code> Block ersetzen → auf GitHub pushen. Dateien in <code>assets/</code> hochladen.',
+    'lbl-global':'Seiten-Einstellungen','lbl-heading':'Überschrift','lbl-from':'Absender',
+    'lbl-music':'Hintergrundmusik','lbl-music-note':'MP3 in <code>assets/</code> hochladen → Pfad eingeben. Leer = kein Musik-Button.',
+    'lbl-autoplay':'Musik auto-starten','lbl-interval':'Auto-Wechsel Polaroids (Sek.)',
+    'lbl-theme':'Farb-Thema','lbl-cbg':'Hintergrund','lbl-cg1':'Glow oben-links','lbl-cg2':'Glow unten-rechts','lbl-cg3':'Glow Mitte',
+    'lbl-letter':'Brief — Seiten','lbl-pagetext':'Text dieser Seite',
+    'lbl-charlimit':'Empfohlen: max 220 Zeichen',
+    addPage:'+ Seite hinzufügen',delPage:'Seite löschen',
+    'lbl-polaroids':'Polaroid-Fotos (max 6)',
+    'lbl-photo-note':'Fotos in <code>assets/</code> laden → Pfad eingeben. Max 6 Polaroids.',
+    photoUrl:'Foto-URL oder Pfad','lbl-caption':'Bildunterschrift (handschriftlich)',
+    'lbl-output':'Generierter CONFIG-Block',
+    'lbl-output-desc':'Config generieren → kopieren → in <code>index.html</code> den <code>const CONFIG = {…};</code> Block ersetzen → pushen.',
+    generate:'⚙ Config generieren',preview:'🔗 Live-Seite öffnen',copy:'Kopieren',copied:'✓ Kopiert',
+    generated:'Config generiert ✓ — kopieren & einfügen',
+    pagePlaceholder:'Liebe Mama,\n...',
+    photoPlaceholder:'assets/foto1.jpg  oder  https://...',
+    capPlaceholder:'z.B. Sommer 2019 ❤',
+    page:'Seite',
+  },
+  en:{
+    adminTitle:'✦ Admin — Mother\'s Day',
+    adminSub:'Edit configuration & generate code',
+    liveLink:'🔗 Live Page',
+    infoBox:'<strong>Workflow:</strong> Edit everything → <em>Generate Config</em> → copy code → replace <code>const CONFIG = {…};</code> in <code>index.html</code> → push to GitHub. Upload files to <code>assets/</code>.',
+    'lbl-global':'Page Settings','lbl-heading':'Heading','lbl-from':'Sender',
+    'lbl-music':'Background Music','lbl-music-note':'Upload MP3 to <code>assets/</code> → enter path. Empty = no music button.',
+    'lbl-autoplay':'Auto-start music','lbl-interval':'Polaroid auto-advance (sec)',
+    'lbl-theme':'Color Theme','lbl-cbg':'Background','lbl-cg1':'Glow top-left','lbl-cg2':'Glow bottom-right','lbl-cg3':'Glow center',
+    'lbl-letter':'Letter — Pages','lbl-pagetext':'Text of this page',
+    'lbl-charlimit':'Recommended: max 220 characters',
+    addPage:'+ Add page',delPage:'Delete page',
+    'lbl-polaroids':'Polaroid Photos (max 6)',
+    'lbl-photo-note':'Upload photos to <code>assets/</code> → enter path. Max 6 polaroids.',
+    photoUrl:'Photo URL or path','lbl-caption':'Caption (handwritten style)',
+    'lbl-output':'Generated CONFIG Block',
+    'lbl-output-desc':'Generate config → copy → replace <code>const CONFIG = {…};</code> in <code>index.html</code> → push.',
+    generate:'⚙ Generate Config',preview:'🔗 Open Live Page',copy:'Copy',copied:'✓ Copied',
+    generated:'Config generated ✓ — copy & paste',
+    pagePlaceholder:'Dear Mum,\n...',
+    photoPlaceholder:'assets/photo1.jpg  or  https://...',
+    capPlaceholder:'e.g. Summer 2019 ❤',
+    page:'Page',
+  }
+};
+
+let lang='de';
+
+function applyLang(){
+  const t=T[lang];
+  document.getElementById('adminTitle').textContent=t.adminTitle;
+  document.getElementById('adminSub').textContent=t.adminSub;
+  document.getElementById('liveLink').textContent=t.liveLink;
+  document.getElementById('infoBox').innerHTML=t.infoBox;
+  const ids=['lbl-global','lbl-heading','lbl-from','lbl-music','lbl-autoplay','lbl-interval',
+             'lbl-theme','lbl-cbg','lbl-cg1','lbl-cg2','lbl-cg3','lbl-letter','lbl-pagetext',
+             'lbl-charlimit','lbl-polaroids','lbl-output'];
+  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=t[id]||el.innerHTML;});
+  document.getElementById('lbl-music-note').innerHTML=t['lbl-music-note'];
+  document.getElementById('lbl-photo-note').innerHTML=t['lbl-photo-note'];
+  document.getElementById('lbl-output-desc').innerHTML=t['lbl-output-desc'];
+  document.getElementById('addPageBtn').textContent=t.addPage;
+  document.getElementById('delPageBtn').textContent=t.delPage;
+  document.getElementById('generateBtn').textContent=t.generate;
+  document.getElementById('previewBtn').textContent=t.preview;
+  document.getElementById('copyBtn').textContent=t.copy;
+  document.getElementById('newPhotoUrl').placeholder=t.photoPlaceholder;
+  document.getElementById('pageText').placeholder=t.pagePlaceholder;
+  renderPhotoList();
+  renderLetterTabs();
+}
+
+document.querySelectorAll('.lang-btn').forEach(btn=>btn.addEventListener('click',()=>{
+  lang=btn.dataset.lang;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('on',b.dataset.lang===lang));
+  applyLang();
+}));
+
+// ══════════════════════════════════
+//  STATE
+// ══════════════════════════════════
+const PRESETS={
+  warm: {bg:'#fdf6ee',g1:'rgba(255,200,160,0.45)',g2:'rgba(255,180,200,0.30)',g3:'rgba(255,220,180,0.20)'},
+  rose: {bg:'#fdf0f5',g1:'rgba(255,180,200,0.42)',g2:'rgba(220,150,220,0.32)',g3:'rgba(255,210,230,0.25)'},
+  sky:  {bg:'#f0f7fd',g1:'rgba(160,210,255,0.40)',g2:'rgba(180,230,255,0.30)',g3:'rgba(200,220,255,0.22)'},
+  forest:{bg:'#f2f8f3',g1:'rgba(160,220,180,0.40)',g2:'rgba(200,240,200,0.30)',g3:'rgba(180,230,160,0.22)'},
+  dusk: {bg:'#f6f2fd',g1:'rgba(180,150,230,0.40)',g2:'rgba(230,160,200,0.30)',g3:'rgba(200,180,255,0.22)'},
+  ivory:{bg:'#faf8f0',g1:'rgba(255,240,200,0.52)',g2:'rgba(255,220,180,0.38)',g3:'rgba(240,230,200,0.30)'}
+};
+
+// Letter pages
+let pages=[
+  {text:'Liebe Mama,\n\nkein Tag vergeht, an dem ich nicht dankbar bin, dich zu haben.'},
+  {text:'Du hast mir beigebracht, wie man fällt — und wie man wieder aufsteht.'},
+  {text:'Danke für jede Umarmung, jedes Lachen und jede stille Stunde.'},
+  {text:'In Liebe,\n\n— Dein Kind ❤'}
+];
+let curPage=0;
+
+// Polaroids
+let polPhotos=[
+  {photo:'',caption:'Ein besonderer Moment'},
+  {photo:'',caption:'Gemeinsam ❤'},
+  {photo:'',caption:'Unvergesslich'},
+  {photo:'',caption:'Für immer'},
+  {photo:'',caption:'Danke, Mama'},
+  {photo:'',caption:'In Liebe'},
+];
+
+// ══════════════════════════════════
+//  TOGGLE
+// ══════════════════════════════════
+function setTog(id,on){const el=document.getElementById(id);el.classList.toggle('on',!!on);el.dataset.on=on?'true':'false';}
+document.getElementById('tog-ap').addEventListener('click',function(){setTog('tog-ap',this.dataset.on!=='true');});
+
+// ══════════════════════════════════
+//  CHAR COUNTER
+// ══════════════════════════════════
+const MAX=220,WARN=180;
+const ta=document.getElementById('pageText');
+const fill=document.getElementById('charFill');
+const cnt=document.getElementById('charCount');
+
+function updateCharCount(){
+  const n=ta.value.length;
+  const pct=Math.min(n/MAX*100,100);
+  fill.style.width=pct+'%';
+  fill.style.background=n>MAX?'var(--err)':n>WARN?'var(--gold)':'var(--ok)';
+  cnt.textContent=`${n} / ${MAX}`;
+  cnt.className='char-count'+(n>MAX?' over':n>WARN?' warn':'');
+  // Save to current page
+  pages[curPage].text=ta.value;
+}
+ta.addEventListener('input',updateCharCount);
+
+// ══════════════════════════════════
+//  LETTER TABS
+// ══════════════════════════════════
+function renderLetterTabs(){
+  const tc=document.getElementById('letterTabs');
+  tc.innerHTML='';
+  pages.forEach((_,i)=>{
+    const btn=document.createElement('button');
+    btn.className='tab'+(i===curPage?' on':'');
+    btn.textContent=`${T[lang].page} ${i+1}`;
+    btn.addEventListener('click',()=>switchPage(i));
+    tc.appendChild(btn);
+  });
+  document.getElementById('delPageBtn').disabled=pages.length<=1;
+}
+
+function switchPage(i){
+  pages[curPage].text=ta.value;
+  curPage=i;
+  ta.value=pages[i].text||'';
+  updateCharCount();
+  renderLetterTabs();
+}
+
+document.getElementById('addPageBtn').addEventListener('click',()=>{
+  if(pages.length>=12){toast('Max 12 Seiten');return;}
+  pages[curPage].text=ta.value;
+  pages.push({text:''});
+  switchPage(pages.length-1);
+});
+
+document.getElementById('delPageBtn').addEventListener('click',()=>{
+  if(pages.length<=1)return;
+  pages.splice(curPage,1);
+  curPage=Math.min(curPage,pages.length-1);
+  ta.value=pages[curPage].text||'';
+  updateCharCount();
+  renderLetterTabs();
+});
+
+// ══════════════════════════════════
+//  POLAROIDS
+// ══════════════════════════════════
+function renderPhotoList(){
+  const list=document.getElementById('photoList');
+  list.innerHTML='';
+  const addRow=document.getElementById('addPhotoRow');
+  addRow.style.display=polPhotos.length<6?'flex':'none';
+
+  polPhotos.forEach((p,i)=>{
+    const row=document.createElement('div');
+    row.className='photo-row';
+    row.innerHTML=`
+      <div class="photo-thumb" id="thumb-${i}">
+        ${p.photo?`<img src="${p.photo}" onerror="this.parentElement.textContent='📷'">` :'📷'}
+      </div>
+      <div class="photo-fields">
+        <input type="text" class="url-inp" value="${p.photo||''}"
+          placeholder="${T[lang].photoUrl||'assets/foto.jpg'}">
+        <input type="text" class="cap" value="${p.caption||''}"
+          placeholder="${T[lang].capPlaceholder||'Bildunterschrift'}">
+      </div>
+      <button class="photo-del" title="Entfernen">✕</button>`;
+    row.querySelector('.url-inp').addEventListener('input',function(){
+      polPhotos[i].photo=this.value.trim();
+      const th=document.getElementById(`thumb-${i}`);
+      th.innerHTML=this.value?`<img src="${this.value}" onerror="this.parentElement.textContent='📷'">` :'📷';
+    });
+    row.querySelector('.cap').addEventListener('input',function(){polPhotos[i].caption=this.value;});
+    row.querySelector('.photo-del').addEventListener('click',()=>{polPhotos.splice(i,1);renderPhotoList();});
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('addPhotoBtn').addEventListener('click',()=>{
+  if(polPhotos.length>=6){toast('Max 6 Polaroids');return;}
+  const inp=document.getElementById('newPhotoUrl');
+  polPhotos.push({photo:inp.value.trim(),caption:''});
+  inp.value='';renderPhotoList();
+});
+document.getElementById('newPhotoUrl').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('addPhotoBtn').click();});
+
+// ══════════════════════════════════
+//  COLOR PICKERS
+// ══════════════════════════════════
+function r2h(v){
+  if(!v)return'#ffffff';v=v.trim();
+  if(v.startsWith('#'))return v;
+  const m=v.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  return m?'#'+[m[1],m[2],m[3]].map(x=>parseInt(x).toString(16).padStart(2,'0')).join(''):'#ffffff';
+}
+['bg','g1','g2','g3'].forEach(k=>{
+  const cp=document.getElementById('c-'+k),tp=document.getElementById('c-'+k+'-t');
+  cp.addEventListener('input',()=>tp.value=cp.value);
+  tp.addEventListener('input',()=>{const h=r2h(tp.value);if(h)cp.value=h;});
+});
+document.querySelectorAll('.preset').forEach(btn=>btn.addEventListener('click',()=>{
+  const p=PRESETS[btn.dataset.p];if(!p)return;
+  function sc(k,hex,txt){document.getElementById('c-'+k).value=hex;document.getElementById('c-'+k+'-t').value=txt||hex;}
+  sc('bg',p.bg);sc('g1',r2h(p.g1),p.g1);sc('g2',r2h(p.g2),p.g2);sc('g3',r2h(p.g3),p.g3);
+}));
+
+// ══════════════════════════════════
+//  MUSIC PREVIEW
+// ══════════════════════════════════
+const prevAud=document.getElementById('previewAudio');
+let playing=false;
+document.getElementById('playBtn').addEventListener('click',()=>{
+  const url=document.getElementById('s-music').value.trim();
+  if(!url){toast('Kein Musik-Pfad eingegeben');return;}
+  if(playing){prevAud.pause();document.getElementById('playBtn').textContent='▶';playing=false;return;}
+  prevAud.src=url;
+  prevAud.play().then(()=>{document.getElementById('playBtn').textContent='⏹';playing=true;})
+    .catch(()=>toast('Datei nicht gefunden'));
+  prevAud.onended=()=>{document.getElementById('playBtn').textContent='▶';playing=false;};
+});
+
+// ══════════════════════════════════
+//  GENERATE CONFIG
+// ══════════════════════════════════
+document.getElementById('generateBtn').addEventListener('click',()=>{
+  // Save current page text
+  pages[curPage].text=ta.value;
+
+  const heading=document.getElementById('s-heading').value||'Für Mama 💌';
+  const from=document.getElementById('s-from').value||'Dein Kind';
+  const music=document.getElementById('s-music').value.trim();
+  const autoplay=document.getElementById('tog-ap').dataset.on==='true';
+  const interval=Math.max(2,(parseFloat(document.getElementById('s-interval').value)||5))*1000;
+
+  const theme={
+    bg:  document.getElementById('c-bg-t').value||document.getElementById('c-bg').value,
+    glow1:document.getElementById('c-g1-t').value||document.getElementById('c-g1').value,
+    glow2:document.getElementById('c-g2-t').value||document.getElementById('c-g2').value,
+    glow3:document.getElementById('c-g3-t').value||document.getElementById('c-g3').value,
+  };
+
+  const esc=s=>(s||'').replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\n/g,'\\n');
+
+  const lines=[];
+  lines.push('const CONFIG = {');
+  lines.push(`  heading:   "${esc(heading)}",`);
+  lines.push(`  from:      "${esc(from)}",`);
+  lines.push(`  music:     "${esc(music)}",`);
+  lines.push(`  autoplay:  ${autoplay},`);
+  lines.push(`  autoAdvanceMs: ${interval},`);
+  lines.push('');
+  lines.push('  theme: {');
+  lines.push(`    bg:    "${theme.bg}",`);
+  lines.push(`    glow1: "${theme.glow1}",`);
+  lines.push(`    glow2: "${theme.glow2}",`);
+  lines.push(`    glow3: "${theme.glow3}"`);
+  lines.push('  },');
+  lines.push('');
+  lines.push('  pages: [');
+  pages.forEach((p,i)=>{
+    const c=i<pages.length-1?',':'';
+    lines.push(`    { text: "${esc(p.text||'')}" }${c}`);
+  });
+  lines.push('  ],');
+  lines.push('');
+  lines.push('  polaroids: [');
+  polPhotos.forEach((p,i)=>{
+    const c=i<polPhotos.length-1?',':'';
+    lines.push(`    { photo: "${esc(p.photo||'')}", caption: "${esc(p.caption||'')}" }${c}`);
+  });
+  lines.push('  ]');
+  lines.push('};');
+
+  document.getElementById('output').value=lines.join('\n');
+  toast(T[lang].generated);
+});
+
+// ══════════════════════════════════
+//  COPY
+// ══════════════════════════════════
+document.getElementById('copyBtn').addEventListener('click',()=>{
+  const out=document.getElementById('output');
+  if(!out.value||out.value.startsWith('←'))return;
+  navigator.clipboard.writeText(out.value).then(()=>{
+    const btn=document.getElementById('copyBtn');
+    btn.textContent=T[lang].copied;btn.classList.add('done');
+    setTimeout(()=>{btn.textContent=T[lang].copy;btn.classList.remove('done');},2500);
+  }).catch(()=>{out.select();document.execCommand('copy');toast(T[lang].copied);});
+});
+
+document.getElementById('previewBtn').addEventListener('click',()=>window.open('index.html','_blank'));
+
+// ══════════════════════════════════
+//  TOAST
+// ══════════════════════════════════
+function toast(m){
+  const t=document.getElementById('toastEl');
+  t.textContent=m;t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),2800);
+}
+
+// ══════════════════════════════════
+//  INIT
+// ══════════════════════════════════
+ta.value=pages[0].text||'';
+updateCharCount();
+renderLetterTabs();
+renderPhotoList();
+applyLang();
+</script>
+</body>
+</html>
